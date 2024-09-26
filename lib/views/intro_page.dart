@@ -30,35 +30,43 @@ class _IntroPageState extends State<IntroPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFADD8E6),
+              Color(0xFF2196F3),
               Color(0xFFF5F5DC),
             ],
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Image.asset(
-                'assets/logo.png',
-                width: 250,
-                height: 292,
+              // Logo do app
+              Center(
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 250,
+                  height: 292,
+                ),
               ),
               const SizedBox(height: 40),
 
-
+              // Texto para o nome
               const Text(
                 'Por favor, digite seu nome:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 20),
 
-
+              // Campo de texto para inserir o nome
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: 'Digite seu nome',
+                  hintStyle: const TextStyle(color: Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20.0),
                   ),
@@ -69,7 +77,7 @@ class _IntroPageState extends State<IntroPage> {
               ),
               const SizedBox(height: 20),
 
-
+              // Botão de começar
               ElevatedButton(
                 onPressed: () {
                   if (_nameController.text.isNotEmpty) {
@@ -81,10 +89,13 @@ class _IntroPageState extends State<IntroPage> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: const Color(0xFF4CAF50), // Verde vibrante
                   padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                   textStyle: const TextStyle(
                     fontSize: 18,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   foregroundColor: Colors.white,
                 ),

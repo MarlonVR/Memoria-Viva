@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:memoriaviva/views/reminder_details_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/Reminder.dart';
 import 'create_reminder_page.dart';
@@ -35,11 +36,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // Função criada só para testar
   Future<void> _removeUserName() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('userName');
-    await prefs.remove('reminders'); // Remove os lembretes salvos
+    await prefs.remove('reminders');
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const IntroPage()),
@@ -51,141 +51,178 @@ class _MyHomePageState extends State<MyHomePage> {
       context,
       MaterialPageRoute(builder: (context) => const CreateReminderPage()),
     );
-    _loadReminders(); // Recarrega os lembretes quando retorna da CreateReminderPage
+    _loadReminders();
+  }
+
+  void _navigateToReminderDetails(Reminder reminder, int index) async {
+    final updatedReminder = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReminderDetailsPage(reminder: reminder, index: index),
+      ),
+    );
+
+    if (updatedReminder != null) {
+      setState(() {
+        reminders[index] = updatedReminder;
+      });
+    }
   }
 
   Future<void> _deleteReminder(Reminder reminder, int index) async {
-    // Animação de evaporação
     setState(() {
-      reminders[index] = reminder.copyWithOpacity(0.0); // Atualiza a opacidade
+      reminders[index] = reminder.copyWithOpacity(0.0);
     });
 
-
-    await Future.delayed(const Duration(milliseconds: 500)); // Espera a animação terminar
+    await Future.delayed(const Duration(milliseconds: 500));
 
     final prefs = await SharedPreferences.getInstance();
     List<String> reminderList = prefs.getStringList('reminders') ?? [];
 
-    // Remove o lembrete da lista
     reminderList.removeWhere((reminderJson) {
       Reminder r = Reminder.fromJson(reminderJson);
       return r.eventName == reminder.eventName && r.date == reminder.date;
     });
 
-    // Atualiza o SharedPreferences
     await prefs.setStringList('reminders', reminderList);
 
-    // Remove o lembrete da lista local após a animação
     setState(() {
       reminders.removeAt(index);
     });
   }
 
   Widget _buildReminderItem(Reminder reminder, int index) {
-    return AnimatedOpacity(
-      opacity: reminder.opacity ?? 1.0, // Opacidade variável com base no estado
-      duration: const Duration(milliseconds: 500),
-      child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        child: Container(
-          height: 220, // Altura ajustada para permitir mais espaço
-          child: Stack(
-            children: <Widget>[
-              // Verifica se há imagem associada, caso contrário, exibe um estilo diferente
-              Positioned.fill(
-                child: reminder.imagePath != null
-                    ? (reminder.imagePath!.startsWith('assets/')
-                    ? Image.asset(
-                  reminder.imagePath!,
-                  fit: BoxFit.contain, // A imagem se ajustará ao card sem cortar
-                )
-                    : Image.file(
-                  File(reminder.imagePath!),
-                  fit: BoxFit.contain, // A imagem se ajustará ao card sem cortar
-                ))
-                    : Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFFB2DFDB), // Cor suave para o fundo
-                        Color(0xFFE0F7FA), // Cor suave para o fundo
+    return GestureDetector(
+      onTap: () => _navigateToReminderDetails(reminder, index),
+      child: AnimatedOpacity(
+        opacity: reminder.opacity ?? 1.0,
+        duration: const Duration(milliseconds: 500),
+        child: Card(
+          elevation: 5,
+          margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            height: 220,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFB2DFDB),
+                  Color(0xFFE0F7FA),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(2, 4),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: <Widget>[
+                // Verifica se há imagem associada, caso contrário, exibe um gradiente
+                Positioned.fill(
+                  child: reminder.imagePath != null
+                      ? (reminder.imagePath!.startsWith('assets/')
+                      ? Image.asset(
+                    reminder.imagePath!,
+                    fit: BoxFit.cover,
+                  )
+                      : Image.file(
+                    File(reminder.imagePath!),
+                    fit: BoxFit.cover,
+                  ))
+                      : Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFFB2DFDB),
+                          Color(0xFFE0F7FA),
+                        ],
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.event_note,
+                        size: 80,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Informações sobre o lembrete
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(16),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          reminder.eventName,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Data: ${DateFormat('dd/MM/yyyy').format(reminder.date)}',
+                          style: const TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Alarme: ${reminder.alarmTime != null ? reminder.alarmTime!.format(context) : 'Sem alarme'}',
+                          style: const TextStyle(fontSize: 18, color: Colors.white),
+                        ),
                       ],
                     ),
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.event_note,
-                      size: 80,
-                      color: Colors.grey, // Ícone grande quando não houver imagem
-                    ),
-                  ),
                 ),
-              ),
 
-              // Informações sobre o lembrete
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4), // Fundo preto semi-transparente
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      // Nome do evento
-                      Text(
-                        reminder.eventName,
-                        style: const TextStyle(
-                          fontSize: 22, // Tamanho do texto maior
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white, // Texto branco para contraste
+                // Texto "Excluir Lembrete"
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: () => _deleteReminder(reminder, index),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Excluir Lembrete',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 6),
-
-                      // Data e alarme
-                      Text(
-                        'Data: ${DateFormat('dd/MM/yyyy').format(reminder.date)}',
-                        style: const TextStyle(fontSize: 18, color: Colors.white), // Texto maior
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Alarme: ${reminder.alarmTime != null ? reminder.alarmTime!.format(context) : 'Sem alarme'}',
-                        style: const TextStyle(fontSize: 18, color: Colors.white), // Texto maior
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Texto "Excluir Lembrete" no canto superior direito
-              Positioned(
-                top: 8,
-                right: 8,
-                child: GestureDetector(
-                  onTap: () => _deleteReminder(reminder, index),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.8), // Fundo vermelho semi-transparente
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'Excluir Lembrete',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white, // Texto branco para contraste
-                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -196,17 +233,15 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Text(widget.title),
-            IconButton(
-              onPressed: _removeUserName,
-              icon: const Icon(Icons.delete),
-              tooltip: 'Excluir nome de usuário',
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
+        backgroundColor: const Color(0xFF4CAF50),
+        actions: [
+          IconButton(
+            onPressed: _removeUserName,
+            icon: const Icon(Icons.delete),
+            tooltip: 'Excluir nome de usuário',
+          ),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -214,8 +249,8 @@ class _MyHomePageState extends State<MyHomePage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFADD8E6),
-              Color(0xFFF5F5DC),
+              Color(0xFF2196F3), // Azul vibrante
+              Color(0xFFF5F5DC), // Bege
             ],
           ),
         ),
@@ -236,6 +271,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToCreateReminder,
         tooltip: 'Criar Lembrete',
+        backgroundColor: const Color(0xFF4CAF50),
         child: const Icon(Icons.add),
       ),
     );
