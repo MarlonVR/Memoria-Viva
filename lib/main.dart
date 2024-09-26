@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'views/intro_page.dart';
 import 'views/home_page.dart';
-import 'views/splash_screen.dart'; 
+import 'views/splash_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
