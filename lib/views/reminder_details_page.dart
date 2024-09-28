@@ -38,7 +38,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
+      firstDate: DateTime.now(), // Impede a seleção de datas anteriores ao dia atual
       lastDate: DateTime(2101),
     );
     if (pickedDate != null && pickedDate != _selectedDate) {
@@ -122,7 +122,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                       height: 200,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
                             color: Colors.black26,
                             blurRadius: 10,
@@ -155,7 +155,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                 // Nome do Evento
                 const Text(
                   'Nome do Evento',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white), // Letra maior e mais legível
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -181,6 +181,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                 GestureDetector(
                   onTap: () => _selectDate(context),
                   child: Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.white),
@@ -213,6 +214,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                 GestureDetector(
                   onTap: () => _selectAlarmTime(context),
                   child: Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.white),
@@ -316,21 +318,21 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                 const SizedBox(height: 40),
 
                 // Botão de Salvar
-            Center(
-              child: ElevatedButton(
-                onPressed: _saveReminder,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
-                  textStyle: const TextStyle(fontSize: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _saveReminder,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
+                      textStyle: const TextStyle(fontSize: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      backgroundColor: const Color(0xFF4CAF50),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Salvar Alterações'),
                   ),
-                  backgroundColor: const Color(0xFF4CAF50),
-                  foregroundColor: Colors.white,
                 ),
-                child: const Text('Salvar Alterações'),
-              ),
-            ),
               ],
             ),
           ),

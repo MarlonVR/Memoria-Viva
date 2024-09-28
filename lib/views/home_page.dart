@@ -18,11 +18,24 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Reminder> reminders = [];
+  List<Reminder> filteredReminders = [];
+  String searchQuery = '';
+  String selectedFilter = 'Mais recentes';
+  String userName = '';
 
   @override
   void initState() {
     super.initState();
+    _loadUserName();
     _loadReminders();
+  }
+
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('userName') ?? '';
+    });
   }
 
   Future<void> _loadReminders() async {
@@ -33,6 +46,36 @@ class _MyHomePageState extends State<MyHomePage> {
       reminders = reminderList.map((reminderJson) {
         return Reminder.fromJson(reminderJson);
       }).toList();
+      _filterAndSortReminders();
+    });
+  }
+
+  void _filterAndSortReminders() {
+    setState(() {
+      filteredReminders = reminders
+          .where((reminder) =>
+          reminder.eventName.toLowerCase().contains(searchQuery.toLowerCase()))
+          .toList();
+
+      if (selectedFilter == 'Mais recentes') {
+        filteredReminders.sort((a, b) => a.date.compareTo(b.date));
+      } else {
+        filteredReminders.sort((a, b) => b.date.compareTo(a.date));
+      }
+    });
+  }
+
+  void _updateSearchQuery(String query) {
+    setState(() {
+      searchQuery = query;
+      _filterAndSortReminders();
+    });
+  }
+
+  void _updateFilter(String filter) {
+    setState(() {
+      selectedFilter = filter;
+      _filterAndSortReminders();
     });
   }
 
@@ -66,6 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         reminders[index] = updatedReminder;
       });
+      _filterAndSortReminders();
     }
   }
 
@@ -88,6 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     setState(() {
       reminders.removeAt(index);
+      _filterAndSortReminders();
     });
   }
 
@@ -119,7 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 BoxShadow(
                   color: Colors.black26,
                   blurRadius: 8,
-                  offset: Offset(2, 4),
+                  offset: const Offset(2, 4),
                 ),
               ],
             ),
@@ -233,7 +278,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text('Olá, $userName'),
         backgroundColor: const Color(0xFF4CAF50),
         actions: [
           IconButton(
@@ -249,23 +294,94 @@ class _MyHomePageState extends State<MyHomePage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF2196F3), // Azul vibrante
-              Color(0xFFF5F5DC), // Bege
+              Color(0xFF2196F3),
+              Color(0xFFF5F5DC),
             ],
           ),
         ),
-        child: reminders.isEmpty
-            ? const Center(
-          child: Text(
-            'Nenhum lembrete adicionado.',
-            style: TextStyle(fontSize: 18),
-          ),
-        )
-            : ListView.builder(
-          itemCount: reminders.length,
-          itemBuilder: (context, index) {
-            return _buildReminderItem(reminders[index], index);
-          },
+        child: Column(
+          children: [
+            // Barra de Pesquisa
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: TextField(
+                onChanged: _updateSearchQuery,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search, color: Colors.white),
+                  hintText: 'Digite o que você procura...',
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.8),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+
+            // Botões de Filtro
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () => _updateFilter('Mais recentes'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: selectedFilter == 'Mais recentes' ? Colors.green : Colors.grey[300],
+                      border: Border.all(
+                        color: selectedFilter == 'Mais recentes' ? Colors.green : Colors.grey,
+                        width: 2,
+                      ),
+                    ),
+                    child: const Text(
+                      'Mais recentes',
+                      style: TextStyle(fontSize: 18, color: Colors.black),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                GestureDetector(
+                  onTap: () => _updateFilter('Mais distantes'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: selectedFilter == 'Mais distantes' ? Colors.green : Colors.grey[300],
+                      border: Border.all(
+                        color: selectedFilter == 'Mais distantes' ? Colors.green : Colors.grey,
+                        width: 2,
+                      ),
+                    ),
+                    child: const Text(
+                      'Mais distantes',
+                      style: TextStyle(fontSize: 18, color: Colors.black),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            // Lista de Lembretes Filtrados
+            Expanded(
+              child: filteredReminders.isEmpty
+                  ? const Center(
+                child: Text(
+                  'Nenhum lembrete encontrado.',
+                  style: TextStyle(fontSize: 18),
+                ),
+              )
+                  : ListView.builder(
+                itemCount: filteredReminders.length,
+                itemBuilder: (context, index) {
+                  return _buildReminderItem(filteredReminders[index], index);
+                },
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(

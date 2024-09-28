@@ -18,6 +18,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   String? _selectedImagePath;
+  String? errorMessage;
 
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
@@ -33,12 +34,13 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate ?? DateTime.now(),
-      firstDate: DateTime(1900),
+      firstDate: DateTime.now(), // Impede a seleção de datas anteriores
       lastDate: DateTime(2100),
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
+        errorMessage = null; // Reseta a mensagem de erro ao selecionar uma data válida
       });
     }
   }
@@ -70,6 +72,45 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
     setState(() {
       _selectedImagePath = imagePath;
     });
+  }
+
+  void _showImageSourceDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Selecione a origem da imagem'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library, size: 40),
+                title: const Text(
+                  'Galeria',
+                  style: TextStyle(fontSize: 24),
+                ),
+                onTap: () {
+                  _pickImageFromGallery();
+                  Navigator.of(context).pop();
+                },
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.image, size: 40),
+                title: const Text(
+                  'Imagens Padrão',
+                  style: TextStyle(fontSize: 24),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _showDefaultImageDialog();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _showDefaultImageDialog() {
@@ -112,6 +153,14 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, insira o nome do evento.')),
       );
+      return;
+    }
+
+    // Validação para garantir que a data não seja anterior ao dia atual
+    if (selectedDate != null && selectedDate!.isBefore(DateTime.now())) {
+      setState(() {
+        errorMessage = 'A data do lembrete não pode ser anterior ao dia atual.';
+      });
       return;
     }
 
@@ -179,7 +228,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                // Logo no topo
                 Center(
                   child: Image.asset(
                     'assets/logo.png',
@@ -189,7 +237,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // Nome do Evento
                 const Text(
                   'Nome do Evento (Lembrete)',
                   style: TextStyle(
@@ -213,7 +260,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // Data do Evento
                 const Text(
                   'Data',
                   style: TextStyle(
@@ -227,6 +273,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                   onTap: () => _selectDate(context),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                    width: double.infinity,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.white),
                       borderRadius: BorderRadius.circular(16),
@@ -247,11 +294,27 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                     ),
                   ),
                 ),
+
+                // Exibe a mensagem de erro, se houver
+                if (errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Center(
+                      child: Text(
+                        errorMessage!,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red, // Mensagem de erro em vermelho
+                        ),
+                      ),
+                    ),
+                  ),
+
                 const SizedBox(height: 30),
 
-                // Repetir
                 const Text(
-                  'Repetir?',
+                  'Alarme',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -259,59 +322,33 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          repetir = true;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: repetir == true ? Colors.green : Colors.grey[300],
-                          border: Border.all(
-                            color: repetir == true ? Colors.green : Colors.grey,
-                            width: 2,
-                          ),
+                GestureDetector(
+                  onTap: () => _selectTime(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white),
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                          offset: Offset(2, 4),
                         ),
-                        child: const Text(
-                          'Sim',
-                          style: TextStyle(fontSize: 18, color: Colors.black),
-                        ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: 20),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          repetir = false;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: repetir == false ? Colors.red : Colors.grey[300],
-                          border: Border.all(
-                            color: repetir == false ? Colors.red : Colors.grey,
-                            width: 2,
-                          ),
-                        ),
-                        child: const Text(
-                          'Não',
-                          style: TextStyle(fontSize: 18, color: Colors.black),
-                        ),
-                      ),
+                    child: Text(
+                      selectedTime != null
+                          ? selectedTime!.format(context)
+                          : 'Selecione a hora do alarme',
+                      style: const TextStyle(fontSize: 18, color: Colors.black),
                     ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 30),
 
-                // Observações
                 const Text(
                   'Observações',
                   style: TextStyle(
@@ -336,43 +373,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // Alarme
-                const Text(
-                  'Alarme',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () => _selectTime(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white),
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.white,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 8,
-                          offset: Offset(2, 4),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      selectedTime != null
-                          ? selectedTime!.format(context)
-                          : 'Selecione a hora do alarme',
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Pergunta sobre adicionar imagem
                 const Text(
                   'Deseja adicionar alguma imagem?',
                   style: TextStyle(
@@ -436,7 +436,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // Exibir campo de imagem apenas se 'Sim' for selecionado
                 if (adicionarImagem == true) ...[
                   const Text(
                     'Clique no ícone abaixo para adicionar a imagem',
@@ -450,9 +449,16 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                   const SizedBox(height: 10),
                   Center(
                     child: GestureDetector(
-                      onTap: _pickImageFromGallery,
+                      onTap: _showImageSourceDialog,
                       child: _selectedImagePath != null
-                          ? Image.file(
+                          ? _selectedImagePath!.startsWith('assets/')
+                          ? Image.asset(
+                        _selectedImagePath!,
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.cover,
+                      )
+                          : Image.file(
                         File(_selectedImagePath!),
                         width: 200,
                         height: 200,
@@ -473,27 +479,9 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-
-                  // Botão para escolher imagem padrão
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _showDefaultImageDialog,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        backgroundColor: const Color(0xFF4CAF50),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Escolher Imagem Padrão'),
-                    ),
-                  ),
                   const SizedBox(height: 30),
                 ],
 
-                // Botão de Adicionar
                 Center(
                   child: ElevatedButton(
                     onPressed: _saveReminder,
@@ -508,7 +496,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                     ),
                     child: const Text('Adicionar Lembrete'),
                   ),
-                )
+                ),
               ],
             ),
           ),
