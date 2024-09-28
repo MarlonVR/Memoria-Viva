@@ -18,7 +18,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   String? _selectedImagePath;
-  String? errorMessage;
 
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
@@ -34,13 +33,12 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate ?? DateTime.now(),
-      firstDate: DateTime.now(), // Impede a seleção de datas anteriores
+      firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
-        errorMessage = null; // Reseta a mensagem de erro ao selecionar uma data válida
       });
     }
   }
@@ -153,14 +151,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, insira o nome do evento.')),
       );
-      return;
-    }
-
-    // Validação para garantir que a data não seja anterior ao dia atual
-    if (selectedDate != null && selectedDate!.isBefore(DateTime.now())) {
-      setState(() {
-        errorMessage = 'A data do lembrete não pode ser anterior ao dia atual.';
-      });
       return;
     }
 
@@ -294,23 +284,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                     ),
                   ),
                 ),
-
-                // Exibe a mensagem de erro, se houver
-                if (errorMessage != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Center(
-                      child: Text(
-                        errorMessage!,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red, // Mensagem de erro em vermelho
-                        ),
-                      ),
-                    ),
-                  ),
-
                 const SizedBox(height: 30),
 
                 const Text(
