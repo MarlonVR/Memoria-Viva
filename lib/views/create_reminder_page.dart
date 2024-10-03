@@ -322,6 +322,68 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                 ),
                 const SizedBox(height: 30),
 
+                // Opção de repetir o lembrete
+                const Text(
+                  'Repetir alarme todos os dias?',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          repetir = true;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: repetir == true ? Colors.green : Colors.grey[300],
+                          border: Border.all(
+                            color: repetir == true ? Colors.green : Colors.grey,
+                            width: 2,
+                          ),
+                        ),
+                        child: const Text(
+                          'Sim',
+                          style: TextStyle(fontSize: 18, color: Colors.black),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          repetir = false;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: repetir == false ? Colors.red : Colors.grey[300],
+                          border: Border.all(
+                            color: repetir == false ? Colors.red : Colors.grey,
+                            width: 2,
+                          ),
+                        ),
+                        child: const Text(
+                          'Não',
+                          style: TextStyle(fontSize: 18, color: Colors.black),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+
                 const Text(
                   'Observações',
                   style: TextStyle(

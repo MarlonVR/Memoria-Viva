@@ -58,7 +58,6 @@ class _MyHomePageState extends State<MyHomePage> {
       if (selectedFilter == 'Mais recentes') {
         filteredReminders.sort((a, b) => a.date.compareTo(b.date));
       } else {
-
         filteredReminders.sort((a, b) => b.date.compareTo(a.date));
       }
     });
@@ -97,7 +96,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _navigateToReminderDetails(Reminder reminder, int index) async {
-    // Navega para a página de detalhes do lembrete e espera pelo retorno (caso o lembrete seja atualizado)
     final updatedReminder = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -105,20 +103,17 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
 
-    // Caso o lembrete tenha sido atualizado na página de detalhes, atualiza a lista de lembretes
     if (updatedReminder != null) {
       setState(() {
         reminders[index] = updatedReminder;
         _filterAndSortReminders();
       });
 
-      // Atualiza o armazenamento local (SharedPreferences) com o lembrete atualizado
       final prefs = await SharedPreferences.getInstance();
       List<String> reminderList = reminders.map((r) => r.toJson()).toList();
       await prefs.setStringList('reminders', reminderList);
     }
   }
-
 
   Future<void> _deleteReminder(Reminder reminder) async {
     setState(() {
@@ -174,69 +169,69 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         child: Column(
           children: [
-            // Barra de Pesquisa
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: TextField(
-                onChanged: _updateSearchQuery,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search, color: Colors.white),
-                  hintText: 'Digite o que você procura...',
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.8),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
+            // Mostra a barra de pesquisa e os filtros apenas se houver lembretes
+            if (reminders.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: TextField(
+                  onChanged: _updateSearchQuery,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search, color: Colors.white),
+                    hintText: 'Digite o que você procura...',
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Botões de Filtro
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () => _updateFilter('Mais recentes'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: selectedFilter == 'Mais recentes' ? Colors.green : Colors.grey[300],
-                      border: Border.all(
-                        color: selectedFilter == 'Mais recentes' ? Colors.green : Colors.grey,
-                        width: 2,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () => _updateFilter('Mais recentes'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: selectedFilter == 'Mais recentes' ? Colors.green : Colors.grey[300],
+                        border: Border.all(
+                          color: selectedFilter == 'Mais recentes' ? Colors.green : Colors.grey,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Text(
+                        'Mais recentes',
+                        style: TextStyle(fontSize: 18, color: Colors.black),
                       ),
                     ),
-                    child: const Text(
-                      'Mais recentes',
-                      style: TextStyle(fontSize: 18, color: Colors.black),
-                    ),
                   ),
-                ),
-                const SizedBox(width: 20),
-                GestureDetector(
-                  onTap: () => _updateFilter('Mais distantes'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: selectedFilter == 'Mais distantes' ? Colors.green : Colors.grey[300],
-                      border: Border.all(
-                        color: selectedFilter == 'Mais distantes' ? Colors.green : Colors.grey,
-                        width: 2,
+                  const SizedBox(width: 20),
+                  GestureDetector(
+                    onTap: () => _updateFilter('Mais distantes'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: selectedFilter == 'Mais distantes' ? Colors.green : Colors.grey[300],
+                        border: Border.all(
+                          color: selectedFilter == 'Mais distantes' ? Colors.green : Colors.grey,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Text(
+                        'Mais distantes',
+                        style: TextStyle(fontSize: 18, color: Colors.black),
                       ),
                     ),
-                    child: const Text(
-                      'Mais distantes',
-                      style: TextStyle(fontSize: 18, color: Colors.black),
-                    ),
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
 
             // Lista de Lembretes Filtrados
             Expanded(
@@ -344,7 +339,6 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
             ),
             child: Stack(
               children: <Widget>[
-                // Verifica se há imagem associada, caso contrário, exibe um gradiente
                 Positioned.fill(
                   child: widget.reminder.imagePath != null
                       ? (widget.reminder.imagePath!.startsWith('assets/')
@@ -377,8 +371,6 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
                     ),
                   ),
                 ),
-
-                // Informações sobre o lembrete
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -417,8 +409,6 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
                     ),
                   ),
                 ),
-
-                // Texto "Excluir Lembrete"
                 Positioned(
                   top: 8,
                   right: 8,
