@@ -1,9 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:translator/translator.dart';
 import '../models/Reminder.dart';
+import 'package:path_provider/path_provider.dart';
+
 
 class CreateReminderPage extends StatefulWidget {
   const CreateReminderPage({super.key});
@@ -22,12 +28,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  final List<String> defaultImages = [
-    'assets/images/teste.png',
-    'assets/images/image2.png',
-    'assets/images/image3.png',
-  ];
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -55,9 +55,9 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
     }
   }
 
-  Future<void> _pickImageFromGallery() async {
+  Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    final XFile? pickedImage = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedImage = await picker.pickImage(source: ImageSource.camera);
 
     if (pickedImage != null) {
       setState(() {
@@ -66,84 +66,37 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
     }
   }
 
-  void _selectDefaultImage(String imagePath) {
-    setState(() {
-      _selectedImagePath = imagePath;
-    });
-  }
+  Future<void> _downloadImageFromUnsplash(String query) async {
+    final translator = GoogleTranslator();
+    final translatedQuery = await translator.translate(query, from: 'pt', to: 'en');
+    const String apiKey = 'A880dxidfBGU-9k1njcsW2qOAGaxSLGLFyiDowxwhTw';
 
-  void _showImageSourceDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Selecione a origem da imagem'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.photo_library, size: 40),
-                title: const Text(
-                  'Galeria',
-                  style: TextStyle(fontSize: 24),
-                ),
-                onTap: () {
-                  _pickImageFromGallery();
-                  Navigator.of(context).pop();
-                },
-              ),
-              const SizedBox(height: 20),
-              ListTile(
-                leading: const Icon(Icons.image, size: 40),
-                title: const Text(
-                  'Imagens Padrão',
-                  style: TextStyle(fontSize: 24),
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _showDefaultImageDialog();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+    final url = 'https://api.unsplash.com/photos/random?query=${Uri.encodeComponent(translatedQuery.text)}&client_id=$apiKey';
 
-  void _showDefaultImageDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Escolha uma imagem padrão'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: GridView.builder(
-              shrinkWrap: true,
-              itemCount: defaultImages.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-              ),
-              itemBuilder: (BuildContext context, int index) {
-                return GestureDetector(
-                  onTap: () {
-                    _selectDefaultImage(defaultImages[index]);
-                    Navigator.of(context).pop();
-                  },
-                  child: Image.asset(
-                    defaultImages[index],
-                    fit: BoxFit.cover,
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final imageUrl = jsonDecode(response.body)['urls']['regular'];
+
+        final imageResponse = await http.get(Uri.parse(imageUrl));
+
+        if (imageResponse.statusCode == 200) {
+          final documentDirectory = await getApplicationDocumentsDirectory();
+          final filePath = '${documentDirectory.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final file = File(filePath);
+          file.writeAsBytesSync(imageResponse.bodyBytes);
+          setState(() {
+            _selectedImagePath = file.path;
+          });
+        } else {
+          throw Exception('Erro ao baixar a imagem da URL.');
+        }
+      } else {
+        throw Exception('Erro ao obter imagem da API do Unsplash.');
+      }
+    } catch (e) {
+      print('Erro ao baixar imagem: $e');
+    }
   }
 
   Future<void> _saveReminder() async {
@@ -152,6 +105,11 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
         const SnackBar(content: Text('Por favor, insira o nome do evento.')),
       );
       return;
+    }
+
+    // Se o usuário não quiser tirar foto, baixa imagem do Unsplash
+    if (adicionarImagem == false) {
+      await _downloadImageFromUnsplash(_eventNameController.text);
     }
 
     Reminder reminder = Reminder(
@@ -409,7 +367,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                 const SizedBox(height: 30),
 
                 const Text(
-                  'Deseja adicionar alguma imagem?',
+                  'Deseja tirar uma foto?',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -473,7 +431,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
 
                 if (adicionarImagem == true) ...[
                   const Text(
-                    'Clique no ícone abaixo para adicionar a imagem',
+                    'Clique no ícone abaixo para tirar uma foto',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -484,16 +442,9 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                   const SizedBox(height: 10),
                   Center(
                     child: GestureDetector(
-                      onTap: _showImageSourceDialog,
+                      onTap: _takePhoto,
                       child: _selectedImagePath != null
-                          ? _selectedImagePath!.startsWith('assets/')
-                          ? Image.asset(
-                        _selectedImagePath!,
-                        width: 200,
-                        height: 200,
-                        fit: BoxFit.cover,
-                      )
-                          : Image.file(
+                          ? Image.file(
                         File(_selectedImagePath!),
                         width: 200,
                         height: 200,
@@ -507,7 +458,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
-                          Icons.add_a_photo,
+                          Icons.camera_alt,
                           color: Colors.grey,
                           size: 100,
                         ),
