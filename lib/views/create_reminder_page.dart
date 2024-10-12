@@ -35,6 +35,8 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
+      
+      
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
@@ -155,8 +157,8 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Criar Lembrete'),
-        backgroundColor: const Color(0xFF4CAF50),
+        title: const Text('Criar Lembrete',style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color.fromARGB(255, 76, 175, 125),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -178,12 +180,12 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
               children: <Widget>[
                 Center(
                   child: Image.asset(
-                    'assets/logo.png',
-                    width: 120,
-                    height: 120,
+                    'assets/logo_notext.png',
+                    width: 200,
+                    height: 200,
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
 
                 const Text(
                   'Nome do Evento (Lembrete)',
@@ -204,7 +206,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
                   ),
-                  style: const TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 20),
                 ),
                 const SizedBox(height: 30),
 
@@ -238,7 +240,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                       selectedDate != null
                           ? DateFormat('dd/MM/yyyy', 'pt_BR').format(selectedDate!)
                           : 'Escolha a data do evento',
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
+                      style: const TextStyle(fontSize: 20, color: Colors.black),
                     ),
                   ),
                 ),
@@ -274,7 +276,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                       selectedTime != null
                           ? selectedTime!.format(context)
                           : 'Selecione a hora do alarme',
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
+                      style: const TextStyle(fontSize: 20, color: Colors.black),
                     ),
                   ),
                 ),
@@ -334,7 +336,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                         ),
                         child: const Text(
                           'Não',
-                          style: TextStyle(fontSize: 18, color: Colors.black),
+                          style: TextStyle(fontSize: 20, color: Colors.black),
                         ),
                       ),
                     ),
@@ -362,7 +364,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
                   ),
-                  style: const TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 20),
                 ),
                 const SizedBox(height: 30),
 
@@ -397,7 +399,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                         ),
                         child: const Text(
                           'Sim',
-                          style: TextStyle(fontSize: 18, color: Colors.black),
+                          style: TextStyle(fontSize: 20, color: Colors.black),
                         ),
                       ),
                     ),
@@ -421,7 +423,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                         ),
                         child: const Text(
                           'Não',
-                          style: TextStyle(fontSize: 18, color: Colors.black),
+                          style: TextStyle(fontSize: 20, color: Colors.black),
                         ),
                       ),
                     ),
@@ -433,7 +435,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                   const Text(
                     'Clique no ícone abaixo para tirar uma foto',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -473,11 +475,11 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                     onPressed: _saveReminder,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
-                      textStyle: const TextStyle(fontSize: 18),
+                      textStyle: const TextStyle(fontSize: 20,fontWeight: FontWeight.bold),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      backgroundColor: const Color(0xFF4CAF50),
+                      backgroundColor: const Color.fromARGB(255, 76, 175, 125),
                       foregroundColor: Colors.white,
                     ),
                     child: const Text('Adicionar Lembrete'),

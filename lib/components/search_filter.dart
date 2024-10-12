@@ -8,12 +8,12 @@ class SearchFilter extends StatelessWidget {
   final Function(String) onFilterSelected;
 
   const SearchFilter({
-    Key? key,
+    super.key,
     required this.searchQuery,
     required this.onSearchQueryChanged,
     required this.selectedFilter,
     required this.onFilterSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +26,7 @@ class SearchFilter extends StatelessWidget {
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search, color: Colors.white),
               hintText: 'Digite o que você procura...',
+              hintStyle: TextStyle(fontSize: 20),
               filled: true,
               fillColor: Colors.white.withOpacity(0.8),
               border: OutlineInputBorder(
@@ -66,26 +67,26 @@ class FilterButton extends StatelessWidget {
   final bool isSelected;
 
   const FilterButton({
-    Key? key,
+    super.key,
     required this.label,
     required this.isSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: isSelected ? Colors.green : Colors.grey[300],
+        color: isSelected ? Color.fromARGB(255, 76, 175, 125) : Colors.grey[300],
         border: Border.all(
-          color: isSelected ? Colors.green : Colors.grey,
+          color: isSelected ? Color.fromARGB(255, 76, 175, 125) : Colors.grey,
           width: 2,
         ),
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 18, color: Colors.black),
+        style: const TextStyle(fontSize: 20, color: Colors.black,fontWeight: FontWeight.bold),
       ),
     );
   }

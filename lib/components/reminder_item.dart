@@ -9,11 +9,11 @@ class ReminderItem extends StatefulWidget {
   final VoidCallback onTap;
 
   const ReminderItem({
-    Key? key,
+    super.key,
     required this.reminder,
     required this.onDelete,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   _ReminderItemState createState() => _ReminderItemState();
@@ -69,11 +69,11 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
                   Color(0xFFE0F7FA),
                 ],
               ),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black26,
                   blurRadius: 8,
-                  offset: const Offset(2, 4),
+                  offset: Offset(2, 4),
                 ),
               ],
             ),
@@ -138,12 +138,12 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
                         const SizedBox(height: 6),
                         Text(
                           'Data: ${DateFormat('dd/MM/yyyy').format(widget.reminder.date)}',
-                          style: const TextStyle(fontSize: 18, color: Colors.white),
+                          style: const TextStyle(fontSize: 20, color: Colors.white),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Alarme: ${widget.reminder.alarmTime != null ? widget.reminder.alarmTime!.format(context) : 'Sem alarme'}',
-                          style: const TextStyle(fontSize: 18, color: Colors.white),
+                          style: const TextStyle(fontSize: 20, color: Colors.white),
                         ),
                       ],
                     ),
@@ -163,7 +163,7 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
                       child: const Text(
                         'Excluir Lembrete',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 20,
                           color: Colors.white,
                         ),
                       ),

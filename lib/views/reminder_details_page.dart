@@ -9,7 +9,7 @@ class ReminderDetailsPage extends StatefulWidget {
   final Reminder reminder;
   final int index;
 
-  const ReminderDetailsPage({Key? key, required this.reminder, required this.index}) : super(key: key);
+  const ReminderDetailsPage({super.key, required this.reminder, required this.index});
 
   @override
   _ReminderDetailsPageState createState() => _ReminderDetailsPageState();
@@ -93,8 +93,8 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalhes do Lembrete'),
-        backgroundColor: const Color(0xFF4CAF50),
+        title: const Text('Detalhes do Lembrete',style: TextStyle(fontWeight: FontWeight.bold),),
+        backgroundColor: const Color.fromARGB(255, 76, 175, 125),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -160,7 +160,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                 const SizedBox(height: 10),
                 TextField(
                   controller: _eventNameController,
-                  style: const TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 20),
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -199,7 +199,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                       _selectedDate != null
                           ? DateFormat('dd/MM/yyyy').format(_selectedDate!)
                           : 'Selecione a data',
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
+                      style: const TextStyle(fontSize: 20, color: Colors.black),
                     ),
                   ),
                 ),
@@ -232,7 +232,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                       _selectedAlarmTime != null
                           ? _selectedAlarmTime!.format(context)
                           : 'Selecione a hora do alarme',
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
+                      style: const TextStyle(fontSize: 20, color: Colors.black),
                     ),
                   ),
                 ),
@@ -265,7 +265,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                         ),
                         child: const Text(
                           'Sim',
-                          style: TextStyle(fontSize: 18, color: Colors.black),
+                          style: TextStyle(fontSize: 20, color: Colors.black),
                         ),
                       ),
                     ),
@@ -288,7 +288,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                         ),
                         child: const Text(
                           'Não',
-                          style: TextStyle(fontSize: 18, color: Colors.black),
+                          style: TextStyle(fontSize: 20, color: Colors.black),
                         ),
                       ),
                     ),
@@ -305,7 +305,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                 TextField(
                   controller: _notesController,
                   maxLines: 3,
-                  style: const TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 20),
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -323,14 +323,14 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                     onPressed: _saveReminder,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
-                      textStyle: const TextStyle(fontSize: 18),
+                      textStyle: const TextStyle(fontSize: 20),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      backgroundColor: const Color(0xFF4CAF50),
+                      backgroundColor: const Color.fromARGB(255, 76, 175, 125),
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Salvar Alterações'),
+                    child: const Text('Salvar Alterações',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
                   ),
                 ),
               ],

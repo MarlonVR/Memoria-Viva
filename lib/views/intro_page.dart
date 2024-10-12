@@ -48,7 +48,7 @@ class _IntroPageState extends State<IntroPage> {
                   height: 292,
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 10),
 
               // Texto para o nome
               const Text(
@@ -59,14 +59,14 @@ class _IntroPageState extends State<IntroPage> {
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
               // Campo de texto para inserir o nome
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: 'Digite seu nome',
-                  hintStyle: const TextStyle(color: Colors.grey),
+                  hintStyle: const TextStyle(color: Colors.grey,fontSize: 18),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20.0),
                   ),
@@ -75,7 +75,7 @@ class _IntroPageState extends State<IntroPage> {
                 ),
                 style: const TextStyle(fontSize: 18),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
               // Botão de começar
               ElevatedButton(
@@ -89,17 +89,18 @@ class _IntroPageState extends State<IntroPage> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50), // Verde vibrante
+                  backgroundColor: const Color.fromARGB(255, 76, 175, 125), // Verde vibrante
                   padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                   textStyle: const TextStyle(
                     fontSize: 18,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('Começar'),
+                child: const Text('Começar',style:TextStyle(fontSize: 22,fontWeight: FontWeight.bold)),
+                
               ),
             ],
           ),
