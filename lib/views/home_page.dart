@@ -146,12 +146,12 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Olá, $userName'),
-        backgroundColor: const Color(0xFF4CAF50),
+        title: Text('Olá, $userName',style:TextStyle(fontSize: 22,fontWeight: FontWeight.bold)),
+        backgroundColor: const Color.fromARGB(255, 76, 175, 125),
         actions: [
           IconButton(
             onPressed: _removeUserName,
-            icon: const Icon(Icons.delete),
+            icon: const Icon(Icons.delete,size: 40,),
             tooltip: 'Excluir nome de usuário',
           ),
         ],
@@ -186,7 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ? const Center(
                 child: Text(
                   'Nenhum lembrete encontrado.',
-                  style: TextStyle(fontSize: 18),
+                  style: TextStyle(fontSize: 22),
                 ),
               )
                   : ListView.builder(
@@ -202,9 +202,10 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToCreateReminder,
         tooltip: 'Criar Lembrete',
-        backgroundColor: const Color(0xFF4CAF50),
-        child: const Icon(Icons.add),
+        backgroundColor: const Color.fromARGB(255, 76, 175, 125),
+        child: const Icon(Icons.add,size: 40,),
       ),
+      
     );
   }
 }

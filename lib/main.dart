@@ -39,8 +39,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Memória Viva',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 76, 175, 125)),
         useMaterial3: true,
+        datePickerTheme: const DatePickerThemeData(
+          dayStyle: TextStyle(fontSize: 20),
+          headerHelpStyle: TextStyle(fontSize: 20),
+          confirmButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20))),
+          cancelButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20)))
+        ),
+        timePickerTheme: const TimePickerThemeData(
+          dialTextStyle: TextStyle(fontSize: 20),
+          confirmButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20))),
+          cancelButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20)))
+        )
       ),
       locale: const Locale('pt', 'BR'),
       localizationsDelegates: const [
