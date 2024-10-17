@@ -4,14 +4,38 @@ import 'views/intro_page.dart';
 import 'views/home_page.dart';
 import 'views/splash_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  AwesomeNotifications().initialize(
+    null, // Ícone padrão para notificações (pode ser null)
+    [
+      NotificationChannel(
+        channelKey: 'basic_channel',
+        channelName: 'Lembretes',
+        channelDescription: 'Notificações de lembretes',
+        defaultColor: Color(0xFF9D50DD),
+        ledColor: Colors.white,
+        importance: NotificationImportance.High,
+        channelShowBadge: true,
+      ),
+    ],
+    debug: true,
+  );
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   Future<bool> _checkIfNameExists() async {
     print('Verificando se o nome do usuário existe nos SharedPreferences...');
 
@@ -34,6 +58,21 @@ class MyApp extends StatelessWidget {
     return userName;
   }
 
+  // Adicione este método para solicitar permissão de notificações
+  Future<void> _requestNotificationPermission() async {
+    bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
+    if (!isAllowed) {
+      // Solicita permissão ao usuário
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _requestNotificationPermission();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -44,14 +83,14 @@ class MyApp extends StatelessWidget {
         datePickerTheme: const DatePickerThemeData(
           dayStyle: TextStyle(fontSize: 20),
           headerHelpStyle: TextStyle(fontSize: 20),
-          confirmButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20))),
-          cancelButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20)))
+          confirmButtonStyle: ButtonStyle(textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 20))),
+          cancelButtonStyle: ButtonStyle(textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 20))),
         ),
         timePickerTheme: const TimePickerThemeData(
           dialTextStyle: TextStyle(fontSize: 20),
-          confirmButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20))),
-          cancelButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20)))
-        )
+          confirmButtonStyle: ButtonStyle(textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 20))),
+          cancelButtonStyle: ButtonStyle(textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 20))),
+        ),
       ),
       locale: const Locale('pt', 'BR'),
       localizationsDelegates: const [
@@ -96,4 +135,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

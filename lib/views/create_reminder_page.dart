@@ -1,15 +1,14 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:translator/translator.dart';
 import '../models/Reminder.dart';
 import 'package:path_provider/path_provider.dart';
-
 
 class CreateReminderPage extends StatefulWidget {
   const CreateReminderPage({super.key});
@@ -35,8 +34,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
-      
-      
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
@@ -73,7 +70,8 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
     final translatedQuery = await translator.translate(query, from: 'pt', to: 'en');
     const String apiKey = 'A880dxidfBGU-9k1njcsW2qOAGaxSLGLFyiDowxwhTw';
 
-    final url = 'https://api.unsplash.com/photos/random?query=${Uri.encodeComponent(translatedQuery.text)}&client_id=$apiKey';
+    final url =
+        'https://api.unsplash.com/photos/random?query=${Uri.encodeComponent(translatedQuery.text)}&client_id=$apiKey';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -128,11 +126,51 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
     reminderList.add(reminder.toJson());
     await prefs.setStringList('reminders', reminderList);
 
+    // Agende a notificação
+    await _scheduleNotification(reminder);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Lembrete adicionado com sucesso!')),
     );
 
     Navigator.pop(context);
+  }
+
+  Future<void> _scheduleNotification(Reminder reminder) async {
+    // Gerar um ID único para a notificação
+    int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+
+    // Calcular a data e hora da notificação
+    DateTime scheduledDateTime = DateTime(
+      reminder.date.year,
+      reminder.date.month,
+      reminder.date.day,
+      reminder.alarmTime?.hour ?? 0,
+      reminder.alarmTime?.minute ?? 0,
+    );
+
+    // Se a data/hora já passou, ajuste para o próximo dia
+    if (scheduledDateTime.isBefore(DateTime.now())) {
+      scheduledDateTime = scheduledDateTime.add(Duration(days: 1));
+    }
+
+    // Configurar a notificação
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: notificationId,
+        channelKey: 'basic_channel',
+        title: 'Lembrete: ${reminder.eventName}',
+        body: reminder.notes ?? '',
+        notificationLayout: NotificationLayout.Default,
+        payload: {
+          'eventName': reminder.eventName,
+        },
+      ),
+      schedule: NotificationCalendar.fromDate(
+        date: scheduledDateTime,
+        repeats: reminder.repeat,
+      ),
+    );
   }
 
   @override
@@ -157,7 +195,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Criar Lembrete',style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Criar Lembrete', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: const Color.fromARGB(255, 76, 175, 125),
       ),
       body: Container(
@@ -475,7 +513,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                     onPressed: _saveReminder,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
-                      textStyle: const TextStyle(fontSize: 20,fontWeight: FontWeight.bold),
+                      textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
