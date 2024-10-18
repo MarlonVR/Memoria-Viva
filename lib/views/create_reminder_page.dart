@@ -112,6 +112,8 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
       await _downloadImageFromUnsplash(_eventNameController.text);
     }
 
+    int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+
     Reminder reminder = Reminder(
       eventName: _eventNameController.text,
       date: selectedDate ?? DateTime.now(),
@@ -119,6 +121,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       alarmTime: selectedTime,
       imagePath: _selectedImagePath,
+      notificationId: notificationId,
     );
 
     final prefs = await SharedPreferences.getInstance();
@@ -126,7 +129,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
     reminderList.add(reminder.toJson());
     await prefs.setStringList('reminders', reminderList);
 
-    // Agende a notificação
     await _scheduleNotification(reminder);
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -137,10 +139,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
   }
 
   Future<void> _scheduleNotification(Reminder reminder) async {
-    // Gerar um ID único para a notificação
-    int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
-
-    // Calcular a data e hora da notificação
     DateTime scheduledDateTime = DateTime(
       reminder.date.year,
       reminder.date.month,
@@ -149,25 +147,31 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
       reminder.alarmTime?.minute ?? 0,
     );
 
-    // Se a data/hora já passou, ajuste para o próximo dia
     if (scheduledDateTime.isBefore(DateTime.now())) {
       scheduledDateTime = scheduledDateTime.add(Duration(days: 1));
     }
 
-    // Configurar a notificação
     await AwesomeNotifications().createNotification(
       content: NotificationContent(
-        id: notificationId,
+        id: reminder.notificationId!,
         channelKey: 'basic_channel',
-        title: 'Lembrete: ${reminder.eventName}',
-        body: reminder.notes ?? '',
-        notificationLayout: NotificationLayout.Default,
+        title: 'Alarme: ${reminder.eventName}',
+        body: reminder.notes ?? 'Seu alarme está tocando',
         payload: {
-          'eventName': reminder.eventName,
+          'reminder': reminder.toJson(),
         },
+        displayOnForeground: true,
+        displayOnBackground: true,
+        fullScreenIntent: true,
+        wakeUpScreen: true,
+        category: NotificationCategory.Alarm,
+        criticalAlert: true,
+        autoDismissible: true,
+        actionType: ActionType.Default,
       ),
       schedule: NotificationCalendar.fromDate(
         date: scheduledDateTime,
+        preciseAlarm: true,
         repeats: reminder.repeat,
       ),
     );
@@ -320,7 +324,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // Opção de repetir o lembrete
                 const Text(
                   'Repetir alarme todos os dias?',
                   style: TextStyle(

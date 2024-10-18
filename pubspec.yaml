@@ -21,6 +21,8 @@ dependencies:
   translator: ^0.1.7
   path_provider: ^2.0.11
   awesome_notifications: ^0.10.0
+  just_audio: ^0.9.10
+
 
 
 dev_dependencies:
@@ -37,3 +39,4 @@ flutter:
     - assets/logo.png
     - assets/logo_notext.png
     - assets/images/
+    - assets/sounds/alarm_sound.mp3

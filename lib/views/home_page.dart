@@ -1,3 +1,4 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:memoriaviva/views/reminder_details_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -120,6 +121,10 @@ class _MyHomePageState extends State<MyHomePage> {
       reminders.remove(reminder);
     });
 
+    if (reminder.notificationId != null) {
+      await AwesomeNotifications().cancel(reminder.notificationId!);
+    }
+
     final prefs = await SharedPreferences.getInstance();
     List<String> reminderList = prefs.getStringList('reminders') ?? [];
 
@@ -129,9 +134,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     await prefs.setStringList('reminders', reminderList);
-
     _filterAndSortReminders();
   }
+
 
   Widget _buildReminderItem(Reminder reminder, int index) {
     return ReminderItem(

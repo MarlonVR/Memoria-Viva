@@ -5,6 +5,13 @@ import 'views/home_page.dart';
 import 'views/splash_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'models/Reminder.dart';
+import 'views/alarm_page.dart';
+import 'dart:async';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+final StreamController<ReceivedAction> notificationActionStream = StreamController<ReceivedAction>.broadcast();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,66 +23,102 @@ void main() async {
         channelKey: 'basic_channel',
         channelName: 'Lembretes',
         channelDescription: 'Notificações de lembretes',
-        defaultColor: Color(0xFF9D50DD),
+        defaultColor: const Color(0xFF9D50DD),
         ledColor: Colors.white,
-        importance: NotificationImportance.High,
+        importance: NotificationImportance.Max,
         channelShowBadge: true,
+        soundSource: 'resource://raw/alarm_sound',
+        criticalAlerts: true,
+        playSound: true,
+        enableVibration: true,
+        defaultPrivacy: NotificationPrivacy.Public,
       ),
     ],
     debug: true,
   );
 
-  runApp(const MyApp());
+  // Obter a ação inicial da notificação (se houver)
+  ReceivedAction? initialAction = await AwesomeNotifications()
+      .getInitialNotificationAction(removeFromActionEvents: false);
+
+  AwesomeNotifications().setListeners(
+    onActionReceivedMethod: onActionReceivedMethod,
+  );
+
+  runApp(MyApp(initialAction: initialAction));
 }
 
+// Método que adiciona as ações de notificação ao StreamController
+Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+  notificationActionStream.add(receivedAction);
+}
+
+void _handleNotificationAction(ReceivedAction receivedAction) {
+  print("Payload da notificação: ${receivedAction.payload}");
+  String? reminderJson = receivedAction.payload?['reminder'];
+  if (reminderJson != null) {
+    try {
+      Reminder reminder = Reminder.fromJson(reminderJson);
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => AlarmPage(reminder: reminder),
+        ),
+            (route) => false,
+      );
+
+      if (receivedAction.id != null) {
+        AwesomeNotifications().dismiss(receivedAction.id!);
+      }
+    } catch (e) {
+      print("Erro ao decodificar a notificação: $e");
+    }
+  }
+}
+
+
+
+
+
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final ReceivedAction? initialAction;
+
+  const MyApp({Key? key, this.initialAction}) : super(key: key);
 
   @override
   _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  Future<bool> _checkIfNameExists() async {
-    print('Verificando se o nome do usuário existe nos SharedPreferences...');
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialAction != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleNotificationAction(widget.initialAction!);
+      });
+    }
 
-    // Adiciona o atraso de 3 segundos para mostrar a SplashScreen
-    await Future.delayed(const Duration(seconds: 3));
-    final prefs = await SharedPreferences.getInstance();
-    bool hasName = prefs.containsKey('userName');
+    // Escutar o StreamController para lidar com as ações de notificação
+    notificationActionStream.stream.listen((ReceivedAction receivedAction) {
+      _handleNotificationAction(receivedAction);
+    });
 
-    print('O nome do usuário existe: $hasName');
-    return hasName;
+    // Solicitar permissão de notificação
+    _requestNotificationPermission();
   }
 
-  Future<String?> _getSavedName() async {
-    print('Tentando carregar o nome do usuário dos SharedPreferences...');
-
-    final prefs = await SharedPreferences.getInstance();
-    String? userName = prefs.getString('userName');
-
-    print('Nome carregado: $userName');
-    return userName;
-  }
-
-  // Adicione este método para solicitar permissão de notificações
   Future<void> _requestNotificationPermission() async {
     bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
     if (!isAllowed) {
-      // Solicita permissão ao usuário
+      // Solicitar permissão ao usuário
       await AwesomeNotifications().requestPermissionToSendNotifications();
     }
   }
 
   @override
-  void initState() {
-    super.initState();
-    _requestNotificationPermission();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Memória Viva',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 76, 175, 125)),
@@ -83,13 +126,13 @@ class _MyAppState extends State<MyApp> {
         datePickerTheme: const DatePickerThemeData(
           dayStyle: TextStyle(fontSize: 20),
           headerHelpStyle: TextStyle(fontSize: 20),
-          confirmButtonStyle: ButtonStyle(textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 20))),
-          cancelButtonStyle: ButtonStyle(textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 20))),
+          confirmButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20))),
+          cancelButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20))),
         ),
         timePickerTheme: const TimePickerThemeData(
           dialTextStyle: TextStyle(fontSize: 20),
-          confirmButtonStyle: ButtonStyle(textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 20))),
-          cancelButtonStyle: ButtonStyle(textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 20))),
+          confirmButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20))),
+          cancelButtonStyle: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 20))),
         ),
       ),
       locale: const Locale('pt', 'BR'),
@@ -104,34 +147,38 @@ class _MyAppState extends State<MyApp> {
       home: FutureBuilder<bool>(
         future: _checkIfNameExists(),
         builder: (context, snapshot) {
-          print('Estado do FutureBuilder (verificação de nome): ${snapshot.connectionState}');
           if (snapshot.connectionState == ConnectionState.waiting) {
-            print('Exibindo SplashScreen...');
             return const SplashScreenPage();
           } else if (snapshot.hasData && snapshot.data == true) {
             return FutureBuilder<String?>(
               future: _getSavedName(),
               builder: (context, nameSnapshot) {
-                print('Estado do FutureBuilder (carregamento do nome): ${nameSnapshot.connectionState}');
                 if (nameSnapshot.connectionState == ConnectionState.waiting) {
-                  print('Exibindo SplashScreen enquanto carrega o nome...');
                   return const SplashScreenPage();
                 } else if (nameSnapshot.hasData && nameSnapshot.data != null) {
-                  print('Nome encontrado, indo para HomePage...');
                   return MyHomePage(title: 'Olá, ${nameSnapshot.data}');
                 } else {
-                  print('Nome não encontrado, indo para IntroPage...');
-                  // Se algo der errado ou o nome não estiver presente, mostra a IntroPage
                   return const IntroPage();
                 }
               },
             );
           } else {
-            print('Nome não existe, indo para IntroPage...');
             return const IntroPage();
           }
         },
       ),
     );
+  }
+
+  Future<bool> _checkIfNameExists() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool hasName = prefs.containsKey('userName');
+    return hasName;
+  }
+
+  Future<String?> _getSavedName() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? userName = prefs.getString('userName');
+    return userName;
   }
 }

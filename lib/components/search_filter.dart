@@ -1,4 +1,3 @@
-// search_filter.dart
 import 'package:flutter/material.dart';
 
 class SearchFilter extends StatelessWidget {

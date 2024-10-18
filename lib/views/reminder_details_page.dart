@@ -1,3 +1,4 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -79,14 +80,63 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
       notes: _notesController.text,
       alarmTime: _selectedAlarmTime,
       imagePath: _selectedImagePath,
+      notificationId: widget.reminder.notificationId, // Usar o mesmo ID de notificação
     );
 
     final prefs = await SharedPreferences.getInstance();
     List<String> reminderList = prefs.getStringList('reminders') ?? [];
+
+    // Atualizar o lembrete na lista com base no índice
     reminderList[widget.index] = updatedReminder.toJson();
     await prefs.setStringList('reminders', reminderList);
 
+    // Cancelar a notificação antiga associada ao lembrete usando o ID de notificação existente
+    await AwesomeNotifications().cancel(updatedReminder.notificationId!);
+
+    // Reagendar a notificação com os novos dados
+    _scheduleNotification(updatedReminder);
+
     Navigator.pop(context, updatedReminder);
+  }
+
+  Future<void> _scheduleNotification(Reminder reminder) async {
+    DateTime scheduledDateTime = DateTime(
+      reminder.date.year,
+      reminder.date.month,
+      reminder.date.day,
+      reminder.alarmTime?.hour ?? 0,
+      reminder.alarmTime?.minute ?? 0,
+    );
+
+    if (scheduledDateTime.isBefore(DateTime.now())) {
+      scheduledDateTime = scheduledDateTime.add(Duration(days: 1));
+    }
+
+    // Criar uma nova notificação usando o mesmo ID de notificação para atualizar os dados
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: reminder.notificationId!,
+        channelKey: 'basic_channel',
+        title: 'Alarme: ${reminder.eventName}',
+        body: reminder.notes ?? 'Seu alarme está tocando',
+        payload: {
+          'reminder': reminder.toJson(),
+        },
+        displayOnForeground: true,
+        displayOnBackground: true,
+        fullScreenIntent: true,
+        wakeUpScreen: true,
+        category: NotificationCategory.Alarm,
+        criticalAlert: true,
+        autoDismissible: true,
+        actionType: ActionType.Default,
+      ),
+      schedule: NotificationCalendar.fromDate(
+        date: scheduledDateTime,
+        preciseAlarm: true,
+        repeats: reminder.repeat,
+      ),
+    );
   }
 
   @override
