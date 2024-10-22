@@ -16,6 +16,8 @@ class SearchFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     return Column(
       children: [
         Padding(
@@ -25,7 +27,7 @@ class SearchFilter extends StatelessWidget {
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search, color: Colors.white),
               hintText: 'Digite o que você procura...',
-              hintStyle: TextStyle(fontSize: 20),
+              hintStyle: const TextStyle(fontSize: 20),
               filled: true,
               fillColor: Colors.white.withOpacity(0.8),
               border: OutlineInputBorder(
@@ -38,19 +40,25 @@ class SearchFilter extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            GestureDetector(
-              onTap: () => onFilterSelected('Mais recentes'),
-              child: FilterButton(
-                label: 'Mais recentes',
-                isSelected: selectedFilter == 'Mais recentes',
+            SizedBox(
+              width: screenWidth * 0.45,  // 45% da largura da tela
+              child: GestureDetector(
+                onTap: () => onFilterSelected('Mais recentes'),
+                child: FilterButton(
+                  label: 'Mais recentes',
+                  isSelected: selectedFilter == 'Mais recentes',
+                ),
               ),
             ),
-            const SizedBox(width: 20),
-            GestureDetector(
-              onTap: () => onFilterSelected('Mais distantes'),
-              child: FilterButton(
-                label: 'Mais distantes',
-                isSelected: selectedFilter == 'Mais distantes',
+            const SizedBox(width: 10),
+            SizedBox(
+              width: screenWidth * 0.45,  // 45% da largura da tela
+              child: GestureDetector(
+                onTap: () => onFilterSelected('Mais distantes'),
+                child: FilterButton(
+                  label: 'Mais distantes',
+                  isSelected: selectedFilter == 'Mais distantes',
+                ),
               ),
             ),
           ],
@@ -74,18 +82,19 @@ class FilterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: isSelected ? Color.fromARGB(255, 76, 175, 125) : Colors.grey[300],
+        color: isSelected ? const Color.fromARGB(255, 76, 175, 125) : Colors.grey[300],
         border: Border.all(
-          color: isSelected ? Color.fromARGB(255, 76, 175, 125) : Colors.grey,
+          color: isSelected ? const Color.fromARGB(255, 76, 175, 125) : Colors.grey,
           width: 2,
         ),
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 20, color: Colors.black,fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold),
       ),
     );
   }

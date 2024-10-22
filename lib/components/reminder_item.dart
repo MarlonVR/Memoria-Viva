@@ -47,18 +47,25 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+
     return FadeTransition(
       opacity: _opacityAnimation,
       child: GestureDetector(
         onTap: widget.onTap,
         child: Card(
           elevation: 5,
-          margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+          margin: EdgeInsets.symmetric(
+            vertical: screenHeight * 0.02,
+            horizontal: screenWidth * 0.05,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           child: Container(
-            height: 220,
+            height: screenHeight * 0.3,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               gradient: const LinearGradient(
@@ -116,7 +123,7 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
                   left: 0,
                   right: 0,
                   child: Container(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: EdgeInsets.all(screenWidth * 0.04),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.5),
                       borderRadius: const BorderRadius.only(
@@ -129,21 +136,27 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
                       children: <Widget>[
                         Text(
                           widget.reminder.eventName,
-                          style: const TextStyle(
-                            fontSize: 22,
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.05,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: screenHeight * 0.01),
                         Text(
                           'Data: ${DateFormat('dd/MM/yyyy').format(widget.reminder.date)}',
-                          style: const TextStyle(fontSize: 20, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.045,
+                            color: Colors.white,
+                          ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: screenHeight * 0.005),
                         Text(
                           'Alarme: ${widget.reminder.alarmTime != null ? widget.reminder.alarmTime!.format(context) : 'Sem alarme'}',
-                          style: const TextStyle(fontSize: 20, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.045,
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),
@@ -155,15 +168,18 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
                   child: GestureDetector(
                     onTap: _handleDelete,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                      padding: EdgeInsets.symmetric(
+                        vertical: screenHeight * 0.01,
+                        horizontal: screenWidth * 0.04,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.8),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Excluir Lembrete',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: screenWidth * 0.045,
                           color: Colors.white,
                         ),
                       ),
