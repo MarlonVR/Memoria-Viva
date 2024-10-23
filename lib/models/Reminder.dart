@@ -9,6 +9,7 @@ class Reminder {
   TimeOfDay? alarmTime;
   String? imagePath;
   double opacity;
+  int? notificationId;
 
   Reminder({
     required this.eventName,
@@ -18,21 +19,8 @@ class Reminder {
     this.alarmTime,
     this.imagePath,
     this.opacity = 1.0,
+    this.notificationId,
   });
-
-
-  Reminder copyWithOpacity(double newOpacity) {
-    return Reminder(
-      eventName: eventName,
-      date: date,
-      repeat: repeat,
-      notes: notes,
-      alarmTime: alarmTime,
-      imagePath: imagePath,
-      opacity: newOpacity,
-    );
-  }
-
 
   Map<String, dynamic> toMap() {
     return {
@@ -45,9 +33,9 @@ class Reminder {
           : null,
       'imagePath': imagePath,
       'opacity': opacity,
+      'notificationId': notificationId,
     };
   }
-
 
   factory Reminder.fromMap(Map<String, dynamic> map) {
     return Reminder(
@@ -56,11 +44,11 @@ class Reminder {
       repeat: map['repeat'],
       notes: map['notes'],
       alarmTime: map['alarmTime'] != null
-          ? TimeOfDay(
-          hour: map['alarmTime']['hour'], minute: map['alarmTime']['minute'])
+          ? TimeOfDay(hour: map['alarmTime']['hour'], minute: map['alarmTime']['minute'])
           : null,
       imagePath: map['imagePath'],
       opacity: map['opacity'] ?? 1.0,
+      notificationId: map['notificationId'],
     );
   }
 

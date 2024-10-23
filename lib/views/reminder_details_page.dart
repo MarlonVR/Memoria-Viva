@@ -1,3 +1,4 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -38,7 +39,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime.now(), // Impede a seleção de datas anteriores ao dia atual
+      firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
     if (pickedDate != null && pickedDate != _selectedDate) {
@@ -79,47 +80,100 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
       notes: _notesController.text,
       alarmTime: _selectedAlarmTime,
       imagePath: _selectedImagePath,
+      notificationId: widget.reminder.notificationId,
     );
 
     final prefs = await SharedPreferences.getInstance();
     List<String> reminderList = prefs.getStringList('reminders') ?? [];
+
     reminderList[widget.index] = updatedReminder.toJson();
     await prefs.setStringList('reminders', reminderList);
+
+    await AwesomeNotifications().cancel(updatedReminder.notificationId!);
+
+    _scheduleNotification(updatedReminder);
 
     Navigator.pop(context, updatedReminder);
   }
 
+  Future<void> _scheduleNotification(Reminder reminder) async {
+    DateTime scheduledDateTime = DateTime(
+      reminder.date.year,
+      reminder.date.month,
+      reminder.date.day,
+      reminder.alarmTime?.hour ?? 0,
+      reminder.alarmTime?.minute ?? 0,
+    );
+
+    if (scheduledDateTime.isBefore(DateTime.now())) {
+      scheduledDateTime = scheduledDateTime.add(Duration(days: 1));
+    }
+
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: reminder.notificationId!,
+        channelKey: 'basic_channel',
+        title: 'Alarme: ${reminder.eventName}',
+        body: reminder.notes ?? 'Seu alarme está tocando',
+        payload: {
+          'reminder': reminder.toJson(),
+        },
+        displayOnForeground: true,
+        displayOnBackground: true,
+        fullScreenIntent: true,
+        wakeUpScreen: true,
+        category: NotificationCategory.Alarm,
+        criticalAlert: true,
+        autoDismissible: true,
+        actionType: ActionType.Default,
+      ),
+      schedule: NotificationCalendar.fromDate(
+        date: scheduledDateTime,
+        preciseAlarm: true,
+        repeats: reminder.repeat,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalhes do Lembrete',style: TextStyle(fontWeight: FontWeight.bold),),
+        title: const Text(
+          'Detalhes do Lembrete',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color.fromARGB(255, 76, 175, 125),
       ),
       body: Container(
+        width: screenWidth,
+        height: screenHeight,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF2196F3), // Gradiente com azul
+              Color(0xFF2196F3),
               Color(0xFFF5F5DC),
             ],
           ),
         ),
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: EdgeInsets.all(screenWidth * 0.05),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Exibe a imagem ou um ícone padrão
+                // Exibe a imagem ou ícone
                 Center(
                   child: GestureDetector(
                     onTap: _pickImageFromGallery,
                     child: Container(
-                      width: double.infinity,
-                      height: 200,
+                      width: screenWidth,
+                      height: screenHeight * 0.3,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: const [
@@ -150,39 +204,45 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight * 0.03),
 
                 // Nome do Evento
-                const Text(
+                Text(
                   'Nome do Evento',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: screenHeight * 0.01),
                 TextField(
                   controller: _eventNameController,
-                  style: const TextStyle(fontSize: 20),
+                  style: TextStyle(fontSize: screenWidth * 0.05),
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: screenHeight * 0.025,
+                      horizontal: screenWidth * 0.04,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight * 0.03),
 
                 // Data do Evento
-                const Text(
+                Text(
                   'Data do Evento',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: screenHeight * 0.01),
                 GestureDetector(
                   onTap: () => _selectDate(context),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                    padding: EdgeInsets.symmetric(
+                      vertical: screenHeight * 0.025,
+                      horizontal: screenWidth * 0.04,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.white),
                       borderRadius: BorderRadius.circular(16),
@@ -199,23 +259,26 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                       _selectedDate != null
                           ? DateFormat('dd/MM/yyyy').format(_selectedDate!)
                           : 'Selecione a data',
-                      style: const TextStyle(fontSize: 20, color: Colors.black),
+                      style: TextStyle(fontSize: screenWidth * 0.05, color: Colors.black),
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight * 0.03),
 
                 // Alarme
-                const Text(
+                Text(
                   'Hora do Alarme',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: screenHeight * 0.01),
                 GestureDetector(
                   onTap: () => _selectAlarmTime(context),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                    padding: EdgeInsets.symmetric(
+                      vertical: screenHeight * 0.025,
+                      horizontal: screenWidth * 0.04,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.white),
                       borderRadius: BorderRadius.circular(16),
@@ -232,18 +295,18 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                       _selectedAlarmTime != null
                           ? _selectedAlarmTime!.format(context)
                           : 'Selecione a hora do alarme',
-                      style: const TextStyle(fontSize: 20, color: Colors.black),
+                      style: TextStyle(fontSize: screenWidth * 0.05, color: Colors.black),
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight * 0.03),
 
                 // Repetir
-                const Text(
+                Text(
                   'Repetir?',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: screenHeight * 0.01),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
@@ -254,7 +317,10 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                        padding: EdgeInsets.symmetric(
+                          vertical: screenHeight * 0.02,
+                          horizontal: screenWidth * 0.1,
+                        ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16),
                           color: repetir ? Colors.green : Colors.grey[300],
@@ -263,13 +329,13 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                             width: 2,
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Sim',
-                          style: TextStyle(fontSize: 20, color: Colors.black),
+                          style: TextStyle(fontSize: screenWidth * 0.05, color: Colors.black),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    SizedBox(width: screenWidth * 0.05),
                     GestureDetector(
                       onTap: () {
                         setState(() {
@@ -277,7 +343,10 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                        padding: EdgeInsets.symmetric(
+                          vertical: screenHeight * 0.02,
+                          horizontal: screenWidth * 0.1,
+                        ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16),
                           color: repetir ? Colors.grey[300] : Colors.red,
@@ -286,51 +355,59 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                             width: 2,
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Não',
-                          style: TextStyle(fontSize: 20, color: Colors.black),
+                          style: TextStyle(fontSize: screenWidth * 0.05, color: Colors.black),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight * 0.03),
 
                 // Observações
-                const Text(
+                Text(
                   'Observações',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: screenHeight * 0.01),
                 TextField(
                   controller: _notesController,
                   maxLines: 3,
-                  style: const TextStyle(fontSize: 20),
+                  style: TextStyle(fontSize: screenWidth * 0.05),
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: screenHeight * 0.025,
+                      horizontal: screenWidth * 0.04,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 40),
-
+                SizedBox(height: screenHeight * 0.04),
 
                 Center(
                   child: ElevatedButton(
                     onPressed: _saveReminder,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
-                      textStyle: const TextStyle(fontSize: 20),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.15,
+                        vertical: screenHeight * 0.03,
+                      ),
+                      textStyle: TextStyle(fontSize: screenWidth * 0.05),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       backgroundColor: const Color.fromARGB(255, 76, 175, 125),
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Salvar Alterações',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+                    child: const Text(
+                      'Salvar Alterações',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],
