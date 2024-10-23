@@ -1,12 +1,19 @@
+import 'dart:io';
+
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
-import 'package:memoriaviva/views/reminder_details_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../components/reminder_item.dart';
-import '../components/search_filter.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
 import '../models/Reminder.dart';
 import 'create_reminder_page.dart';
 import 'intro_page.dart';
+import '../components/reminder_item.dart';
+import '../components/search_filter.dart';
+import 'reminder_details_page.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -29,6 +36,11 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     _loadUserName();
     _loadReminders();
+
+    // Verificar otimização de bateria e exibir o pop-up apenas se houver restrições
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkBatteryOptimizationStatus();
+    });
   }
 
   Future<void> _loadUserName() async {
@@ -53,7 +65,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void _filterAndSortReminders() {
     setState(() {
       filteredReminders = reminders
-          .where((reminder) => reminder.eventName.toLowerCase().contains(searchQuery.toLowerCase()))
+          .where((reminder) =>
+          reminder.eventName.toLowerCase().contains(searchQuery.toLowerCase()))
           .toList();
 
       if (selectedFilter == 'Mais recentes') {
@@ -137,6 +150,65 @@ class _MyHomePageState extends State<MyHomePage> {
     _filterAndSortReminders();
   }
 
+  // Verificar se o app está sob restrição de otimização de bateria
+  Future<void> _checkBatteryOptimizationStatus() async {
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      final sdkInt = androidInfo.version.sdkInt ?? 0;
+
+      if (sdkInt >= 23) {
+        bool isIgnoringBatteryOptimizations = await Permission.ignoreBatteryOptimizations.isGranted;
+
+        // Se a otimização estiver ativa, mostrar o pop-up
+        if (!isIgnoringBatteryOptimizations) {
+          _showBatteryOptimizationDialog(context);
+        }
+      }
+    }
+  }
+
+  // Mostrar pop-up para confirmação da ação
+  Future<void> _showBatteryOptimizationDialog(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Otimização de Bateria'),
+          content: const Text(
+              'Para garantir que o aplicativo funcione corretamente, recomendamos desativar as otimizações de bateria. Deseja prosseguir para as configurações?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Sim'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _openBatteryOptimizationSettings();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Abrir configurações de otimização de bateria
+  Future<void> _openBatteryOptimizationSettings() async {
+    if (Platform.isAndroid) {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      final packageName = packageInfo.packageName;
+
+      final intent = AndroidIntent(
+        action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+        data: 'package:$packageName',
+      );
+      await intent.launch();
+    }
+  }
 
   Widget _buildReminderItem(Reminder reminder, int index) {
     return ReminderItem(
@@ -151,12 +223,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Olá, $userName',style:TextStyle(fontSize: 22,fontWeight: FontWeight.bold)),
+        title: Text('Olá, $userName',
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         backgroundColor: const Color.fromARGB(255, 76, 175, 125),
         actions: [
           IconButton(
             onPressed: _removeUserName,
-            icon: const Icon(Icons.delete,size: 40,),
+            icon: const Icon(Icons.delete, size: 40),
             tooltip: 'Excluir nome de usuário',
           ),
         ],
@@ -174,7 +247,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         child: Column(
           children: [
-            // Mostra a barra de pesquisa e os filtros apenas se houver lembretes
             if (reminders.isNotEmpty) ...[
               SearchFilter(
                 searchQuery: searchQuery,
@@ -184,8 +256,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               const SizedBox(height: 10),
             ],
-
-            // Lista de Lembretes Filtrados
             Expanded(
               child: filteredReminders.isEmpty
                   ? const Center(
@@ -208,9 +278,8 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _navigateToCreateReminder,
         tooltip: 'Criar Lembrete',
         backgroundColor: const Color.fromARGB(255, 76, 175, 125),
-        child: const Icon(Icons.add,size: 40,),
+        child: const Icon(Icons.add, size: 40),
       ),
-      
     );
   }
 }

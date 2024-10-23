@@ -75,10 +75,6 @@ void _handleNotificationAction(ReceivedAction receivedAction) {
   }
 }
 
-
-
-
-
 class MyApp extends StatefulWidget {
   final ReceivedAction? initialAction;
 
@@ -103,7 +99,7 @@ class _MyAppState extends State<MyApp> {
       _handleNotificationAction(receivedAction);
     });
 
-    // Solicitar permissão de notificação
+    // Solicitar permissões necessárias
     _requestNotificationPermission();
   }
 
