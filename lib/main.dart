@@ -111,6 +111,23 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Future<bool> _checkIfNameExists() async {
+    print('Verificando se o nome do usuário existe nos SharedPreferences...');
+    await Future.delayed(const Duration(seconds: 3)); // Atraso para mostrar a SplashScreen
+    final prefs = await SharedPreferences.getInstance();
+    bool hasName = prefs.containsKey('userName');
+    print('O nome do usuário existe: $hasName');
+    return hasName;
+  }
+
+  Future<String?> _getSavedName() async {
+    print('Tentando carregar o nome do usuário dos SharedPreferences...');
+    final prefs = await SharedPreferences.getInstance();
+    String? userName = prefs.getString('userName');
+    print('Nome carregado: $userName');
+    return userName;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -164,17 +181,5 @@ class _MyAppState extends State<MyApp> {
         },
       ),
     );
-  }
-
-  Future<bool> _checkIfNameExists() async {
-    final prefs = await SharedPreferences.getInstance();
-    bool hasName = prefs.containsKey('userName');
-    return hasName;
-  }
-
-  Future<String?> _getSavedName() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? userName = prefs.getString('userName');
-    return userName;
   }
 }
