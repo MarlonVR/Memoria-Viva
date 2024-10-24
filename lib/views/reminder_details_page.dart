@@ -83,6 +83,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
       notificationId: widget.reminder.notificationId,
     );
 
+    // Atualizar a lista de lembretes no SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     List<String> reminderList = prefs.getStringList('reminders') ?? [];
 
@@ -90,50 +91,78 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
     await prefs.setStringList('reminders', reminderList);
 
     await AwesomeNotifications().cancel(updatedReminder.notificationId!);
-
     _scheduleNotification(updatedReminder);
-
     Navigator.pop(context, updatedReminder);
   }
 
   Future<void> _scheduleNotification(Reminder reminder) async {
-    DateTime scheduledDateTime = DateTime(
-      reminder.date.year,
-      reminder.date.month,
-      reminder.date.day,
-      reminder.alarmTime?.hour ?? 0,
-      reminder.alarmTime?.minute ?? 0,
-    );
+    if (reminder.repeat) {
+      await AwesomeNotifications().createNotification(
+        content: NotificationContent(
+          id: reminder.notificationId!,
+          channelKey: 'basic_channel',
+          title: 'Alarme: ${reminder.eventName}',
+          body: reminder.notes ?? 'Seu alarme está tocando',
+          payload: {
+            'reminder': reminder.toJson(),
+          },
+          displayOnForeground: true,
+          displayOnBackground: true,
+          fullScreenIntent: true,
+          wakeUpScreen: true,
+          category: NotificationCategory.Alarm,
+          criticalAlert: true,
+          autoDismissible: true,
+          actionType: ActionType.Default,
+        ),
+        schedule: NotificationCalendar(
+          hour: reminder.alarmTime?.hour ?? 0,
+          minute: reminder.alarmTime?.minute ?? 0,
+          second: 0,
+          repeats: true,
+          preciseAlarm: true,
+        ),
+      );
+    } else {
+      DateTime scheduledDateTime = DateTime(
+        reminder.date.year,
+        reminder.date.month,
+        reminder.date.day,
+        reminder.alarmTime?.hour ?? 0,
+        reminder.alarmTime?.minute ?? 0,
+      );
 
-    if (scheduledDateTime.isBefore(DateTime.now())) {
-      scheduledDateTime = scheduledDateTime.add(Duration(days: 1));
+      if (scheduledDateTime.isBefore(DateTime.now())) {
+        scheduledDateTime = scheduledDateTime.add(const Duration(days: 1));
+      }
+
+      await AwesomeNotifications().createNotification(
+        content: NotificationContent(
+          id: reminder.notificationId!,
+          channelKey: 'basic_channel',
+          title: 'Alarme: ${reminder.eventName}',
+          body: reminder.notes ?? 'Seu alarme está tocando',
+          payload: {
+            'reminder': reminder.toJson(),
+          },
+          displayOnForeground: true,
+          displayOnBackground: true,
+          fullScreenIntent: true,
+          wakeUpScreen: true,
+          category: NotificationCategory.Alarm,
+          criticalAlert: true,
+          autoDismissible: true,
+          actionType: ActionType.Default,
+        ),
+        schedule: NotificationCalendar.fromDate(
+          date: scheduledDateTime,
+          preciseAlarm: true,
+          repeats: false,
+        ),
+      );
     }
-
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-        id: reminder.notificationId!,
-        channelKey: 'basic_channel',
-        title: 'Alarme: ${reminder.eventName}',
-        body: reminder.notes ?? 'Seu alarme está tocando',
-        payload: {
-          'reminder': reminder.toJson(),
-        },
-        displayOnForeground: true,
-        displayOnBackground: true,
-        fullScreenIntent: true,
-        wakeUpScreen: true,
-        category: NotificationCategory.Alarm,
-        criticalAlert: true,
-        autoDismissible: true,
-        actionType: ActionType.Default,
-      ),
-      schedule: NotificationCalendar.fromDate(
-        date: scheduledDateTime,
-        preciseAlarm: true,
-        repeats: reminder.repeat,
-      ),
-    );
   }
+
 
   @override
   Widget build(BuildContext context) {
