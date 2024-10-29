@@ -39,11 +39,73 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
     super.dispose();
   }
 
-  void _handleDelete() {
-    _controller.forward().then((_) {
-      widget.onDelete();
-    });
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color.fromARGB(255, 76, 175, 125),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Confirmar Exclusão',
+            style: TextStyle(
+              fontSize: 24, // Larger font size
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: const Text(
+            'Você realmente deseja excluir este lembrete?',
+            style: TextStyle(
+              fontSize: 20,
+              color: Colors.white70,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Não',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _controller.forward().then((_) => widget.onDelete());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Sim',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +228,7 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
                   top: 8,
                   right: 8,
                   child: GestureDetector(
-                    onTap: _handleDelete,
+                    onTap: _confirmDelete,
                     child: Container(
                       padding: EdgeInsets.symmetric(
                         vertical: screenHeight * 0.01,

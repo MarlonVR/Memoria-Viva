@@ -28,6 +28,8 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
   final TextEditingController _notesController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  bool _isSaving = false;
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -100,57 +102,70 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
   }
 
   Future<void> _saveReminder() async {
-    if (_eventNameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, insira o nome do evento.')),
-      );
-      return;
-    }
+    if (_isSaving) return; // Impede múltiplos cliques
 
-    if (adicionarImagem == true && _selectedImagePath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Você selecionou "Sim" para adicionar uma foto. Por favor, adicione uma foto antes de continuar.',
-            style: TextStyle(fontSize: 16),
+    setState(() {
+      _isSaving = true; // Inicia o processo de salvamento
+    });
+
+    try {
+      if (_eventNameController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, insira o nome do evento.')),
+        );
+        return;
+      }
+
+      if (adicionarImagem == true && _selectedImagePath == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Você selecionou "Sim" para adicionar uma foto. Por favor, adicione uma foto antes de continuar.',
+              style: TextStyle(fontSize: 16),
+            ),
+            backgroundColor: Colors.redAccent,
           ),
-          backgroundColor: Colors.redAccent,
-        ),
+        );
+        return;
+      }
+
+      // Faz o download da imagem do Unsplash caso a opção de adicionarImagem esteja marcada como false
+      if (adicionarImagem == false) {
+        await _downloadImageFromUnsplash(_eventNameController.text);
+      }
+
+      int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+
+      Reminder reminder = Reminder(
+        eventName: _eventNameController.text,
+        date: selectedDate ?? DateTime.now(),
+        repeat: repetir ?? false,
+        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        alarmTime: selectedTime,
+        imagePath: _selectedImagePath,
+        notificationId: notificationId,
       );
-      return;
+
+      final prefs = await SharedPreferences.getInstance();
+      List<String> reminderList = prefs.getStringList('reminders') ?? [];
+      reminderList.add(reminder.toJson());
+      await prefs.setStringList('reminders', reminderList);
+
+      await _scheduleNotification(reminder);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lembrete adicionado com sucesso!')),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      print('Erro ao salvar o lembrete: $e');
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
     }
-
-    // Faz o download da imagem do Unsplash caso a opção de adicionarImagem esteja marcada como false
-    if (adicionarImagem == false) {
-      await _downloadImageFromUnsplash(_eventNameController.text);
-    }
-
-    int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
-
-    Reminder reminder = Reminder(
-      eventName: _eventNameController.text,
-      date: selectedDate ?? DateTime.now(),
-      repeat: repetir ?? false,
-      notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      alarmTime: selectedTime,
-      imagePath: _selectedImagePath,
-      notificationId: notificationId,
-    );
-
-    final prefs = await SharedPreferences.getInstance();
-    List<String> reminderList = prefs.getStringList('reminders') ?? [];
-    reminderList.add(reminder.toJson());
-    await prefs.setStringList('reminders', reminderList);
-
-    await _scheduleNotification(reminder);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Lembrete adicionado com sucesso!')),
-    );
-
-    Navigator.pop(context);
   }
-
 
   Future<void> _scheduleNotification(Reminder reminder) async {
     if (reminder.repeat) {
@@ -219,7 +234,6 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
       );
     }
   }
-
 
   @override
   void dispose() {
@@ -537,7 +551,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                     ],
                     Center(
                       child: ElevatedButton(
-                        onPressed: _saveReminder,
+                        onPressed: _isSaving ? null : _saveReminder, // Desabilita o botão se estiver salvando
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
                             horizontal: MediaQuery.of(context).size.width * 0.15,
@@ -547,10 +561,16 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          backgroundColor: const Color.fromARGB(255, 76, 175, 125),
+                          backgroundColor: _isSaving
+                              ? Colors.grey // Altera a cor do botão quando desabilitado
+                              : const Color.fromARGB(255, 76, 175, 125),
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('Adicionar Lembrete'),
+                        child: _isSaving
+                            ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        )
+                            : const Text('Adicionar Lembrete'),
                       ),
                     ),
                   ],
