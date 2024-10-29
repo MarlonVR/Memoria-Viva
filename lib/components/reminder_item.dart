@@ -51,7 +51,7 @@ class _ReminderItemState extends State<ReminderItem> with SingleTickerProviderSt
           title: const Text(
             'Confirmar Exclusão',
             style: TextStyle(
-              fontSize: 24, // Larger font size
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),

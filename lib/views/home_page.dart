@@ -10,7 +10,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../models/Reminder.dart';
 import 'create_reminder_page.dart';
-import 'intro_page.dart';
 import '../components/reminder_item.dart';
 import '../components/search_filter.dart';
 import 'reminder_details_page.dart';
@@ -91,15 +90,124 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> _removeUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('userName');
-    await prefs.remove('reminders');
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const IntroPage()),
+  Future<void> _changeUserName() async {
+    TextEditingController nameController = TextEditingController(text: userName);
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
+
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.05,
+              vertical: screenHeight * 0.04,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF2196F3),
+                  Color(0xFFF5F5DC),
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Alterar Nome de Usuário',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.06,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.02),
+                TextField(
+                  controller: nameController,
+                  style: TextStyle(fontSize: screenWidth * 0.05),
+                  decoration: InputDecoration(
+                    labelText: 'Novo Nome',
+                    labelStyle: TextStyle(fontSize: screenWidth * 0.045, color: Colors.grey[800]),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: EdgeInsets.all(screenWidth * 0.04),
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.04),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.08,
+                          vertical: screenHeight * 0.015,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.05,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('userName', nameController.text);
+                        setState(() {
+                          userName = nameController.text;
+                        });
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 76, 175, 125),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.08,
+                          vertical: screenHeight * 0.015,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Salvar',
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.05,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
+
 
   void _navigateToCreateReminder() async {
     await Navigator.push(
@@ -157,7 +265,8 @@ class _MyHomePageState extends State<MyHomePage> {
       final sdkInt = androidInfo.version.sdkInt ?? 0;
 
       if (sdkInt >= 23) {
-        bool isIgnoringBatteryOptimizations = await Permission.ignoreBatteryOptimizations.isGranted;
+        bool isIgnoringBatteryOptimizations =
+        await Permission.ignoreBatteryOptimizations.isGranted;
 
         // Se a otimização estiver ativa, mostrar o pop-up
         if (!isIgnoringBatteryOptimizations) {
@@ -228,9 +337,9 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: const Color.fromARGB(255, 76, 175, 125),
         actions: [
           IconButton(
-            onPressed: _removeUserName,
-            icon: const Icon(Icons.delete, size: 40),
-            tooltip: 'Excluir nome de usuário',
+            onPressed: _changeUserName,
+            icon: const Icon(Icons.edit, size: 30), // Ícone de lápis
+            tooltip: 'Alterar nome de usuário',
           ),
         ],
       ),
