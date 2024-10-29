@@ -107,6 +107,20 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
       return;
     }
 
+    if (adicionarImagem == true && _selectedImagePath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Você selecionou "Sim" para adicionar uma foto. Por favor, adicione uma foto antes de continuar.',
+            style: TextStyle(fontSize: 16),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    // Faz o download da imagem do Unsplash caso a opção de adicionarImagem esteja marcada como false
     if (adicionarImagem == false) {
       await _downloadImageFromUnsplash(_eventNameController.text);
     }
@@ -136,6 +150,7 @@ class _CreateReminderPageState extends State<CreateReminderPage> {
 
     Navigator.pop(context);
   }
+
 
   Future<void> _scheduleNotification(Reminder reminder) async {
     if (reminder.repeat) {

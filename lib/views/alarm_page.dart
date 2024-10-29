@@ -118,7 +118,6 @@ class _AlarmPageState extends State<AlarmPage> {
                         ),
                       ),
 
-                    // Notas, se houver
                     if (widget.reminder.notes != null)
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.02),
@@ -126,7 +125,8 @@ class _AlarmPageState extends State<AlarmPage> {
                           widget.reminder.notes!,
                           style: TextStyle(
                             fontSize: MediaQuery.of(context).size.width * 0.05,
-                            color: Colors.white70,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.center,
                         ),

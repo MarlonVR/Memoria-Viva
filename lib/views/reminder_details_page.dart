@@ -61,9 +61,9 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
     }
   }
 
-  Future<void> _pickImageFromGallery() async {
+  Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    final XFile? pickedImage = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedImage = await picker.pickImage(source: ImageSource.camera);
 
     if (pickedImage != null) {
       setState(() {
@@ -163,7 +163,6 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -199,7 +198,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                 // Exibe a imagem ou ícone
                 Center(
                   child: GestureDetector(
-                    onTap: _pickImageFromGallery,
+                    onTap: _takePhoto,
                     child: Container(
                       width: screenWidth,
                       height: screenHeight * 0.3,
@@ -224,7 +223,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
                       child: _selectedImagePath == null
                           ? const Center(
                         child: Icon(
-                          Icons.add_a_photo,
+                          Icons.camera_alt,
                           size: 100,
                           color: Colors.grey,
                         ),
@@ -332,7 +331,7 @@ class _ReminderDetailsPageState extends State<ReminderDetailsPage> {
 
                 // Repetir
                 Text(
-                  'Repetir?',
+                  'Repetir alarme todos os dias?',
                   style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 SizedBox(height: screenHeight * 0.01),
